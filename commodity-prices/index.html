@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harga Komoditas Pontianak - Real-time</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Mozilla Fonts -->
+    <style>
+        @import url('https://code.cdn.mozilla.net/fonts/fira.css');
+        
+        body {
+            font-family: 'Fira Sans', sans-serif;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Fira Sans', sans-serif;
+            font-weight: 700;
+        }
+        
+        .status-badge {
+            animation: pulse-subtle 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .commodity-card {
+            transition: all 0.3s ease;
+        }
+        
+        .commodity-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        .price-diff-up {
+            color: #dc2626;
+        }
+        
+        .price-diff-down {
+            color: #16a34a;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+    <div x-data="commodityApp()" x-init="fetchData()" class="container mx-auto px-4 py-8 max-w-7xl">
+        
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-5xl font-bold text-gray-900 mb-3">
+                🛒 Harga Komoditas Pontianak
+            </h1>
+            <p class="text-gray-600 text-lg">Data real-time harga kebutuhan pokok di Kota Pontianak</p>
+            <p class="text-sm text-gray-500 mt-2" x-show="lastUpdate">
+                Terakhir diupdate: <span x-text="lastUpdate"></span>
+            </p>
+        </div>
+
+        <!-- Search & Filter Section -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Search -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">🔍 Cari Komoditas</label>
+                    <input 
+                        type="text" 
+                        x-model="searchQuery"
+                        @input="filterCommodities()"
+                        placeholder="Contoh: Ayam, Telur, Beras..."
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                    >
+                </div>
+                
+                <!-- Sort -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">📊 Urutkan</label>
+                    <select 
+                        x-model="sortBy"
+                        @change="filterCommodities()"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                    >
+                        <option value="name">Nama (A-Z)</option>
+                        <option value="price-low">Harga Terendah</option>
+                        <option value="price-high">Harga Tertinggi</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Status Filter -->
+            <div class="mt-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">🏷️ Filter Status</label>
+                <div class="flex flex-wrap gap-2">
+                    <button 
+                        @click="statusFilter = 'all'; filterCommodities()"
+                        :class="statusFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded-lg font-medium transition hover:scale-105"
+                    >
+                        Semua
+                    </button>
+                    <button 
+                        @click="statusFilter = 'stabil'; filterCommodities()"
+                        :class="statusFilter === 'stabil' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded-lg font-medium transition hover:scale-105"
+                    >
+                        Stabil
+                    </button>
+                    <button 
+                        @click="statusFilter = 'naik'; filterCommodities()"
+                        :class="statusFilter === 'naik' ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded-lg font-medium transition hover:scale-105"
+                    >
+                        Naik
+                    </button>
+                    <button 
+                        @click="statusFilter = 'turun'; filterCommodities()"
+                        :class="statusFilter === 'turun' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'"
+                        class="px-4 py-2 rounded-lg font-medium transition hover:scale-105"
+                    >
+                        Turun
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div x-show="loading" class="flex justify-center items-center py-20">
+            <div class="text-center">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-gray-600 font-medium">Memuat data harga komoditas...</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div x-show="error" class="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
+            <p class="text-red-600 font-semibold">❌ Gagal memuat data</p>
+            <p class="text-red-500 text-sm mt-2" x-text="error"></p>
+            <button 
+                @click="fetchData()"
+                class="mt-4 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            >
+                Coba Lagi
+            </button>
+        </div>
+
+        <!-- Results Count -->
+        <div x-show="!loading && !error" class="mb-4">
+            <p class="text-gray-600 font-medium">
+                Menampilkan <span class="text-blue-600 font-bold" x-text="filteredCommodities.length"></span> 
+                dari <span class="font-bold" x-text="commodities.length"></span> komoditas
+            </p>
+        </div>
+
+        <!-- Commodities Grid -->
+        <div 
+            x-show="!loading && !error" 
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+            <template x-for="item in filteredCommodities" :key="item.id">
+                <div class="commodity-card bg-white rounded-xl shadow-md overflow-hidden">
+                    <!-- Image -->
+                    <div class="relative h-48 bg-gray-100 overflow-hidden">
+                        <img 
+                            :src="item.pathImage" 
+                            :alt="item.name"
+                            class="w-full h-full object-cover"
+                            loading="lazy"
+                            @error="$event.target.src='https://via.placeholder.com/400x300?text=No+Image'"
+                        >
+                        <!-- Status Badge -->
+                        <div class="absolute top-3 right-3">
+                            <span 
+                                :class="{
+                                    'bg-green-500': item.status === 'stabil',
+                                    'bg-red-500': item.status === 'naik',
+                                    'bg-blue-500': item.status === 'turun'
+                                }"
+                                class="status-badge px-3 py-1 rounded-full text-white text-xs font-bold uppercase shadow-lg"
+                                x-text="item.status"
+                            ></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-5">
+                        <h3 class="font-bold text-gray-900 text-lg mb-3 line-clamp-2" x-text="item.name"></h3>
+                        
+                        <!-- Price -->
+                        <div class="mb-3">
+                            <p class="text-3xl font-bold text-blue-600" x-text="item.average_price"></p>
+                            <p class="text-sm text-gray-500 mt-1">Harga Rata-rata</p>
+                        </div>
+                        
+                        <!-- Price Range -->
+                        <div class="bg-gray-50 rounded-lg p-3 mb-3 text-sm">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">Terendah:</span>
+                                <span class="font-semibold text-green-600" x-text="item.lowest_price"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Tertinggi:</span>
+                                <span class="font-semibold text-red-600" x-text="item.highest_price"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Price Difference -->
+                        <div x-show="item.diff_price !== 'Rp 0'" class="mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-600">Perubahan:</span>
+                                <span 
+                                    :class="item.status === 'naik' ? 'text-red-600' : 'text-green-600'"
+                                    class="font-bold text-sm"
+                                    x-text="item.diff_price"
+                                ></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Update Date -->
+                        <div class="text-xs text-gray-500 border-t pt-3">
+                            📅 Update: <span x-text="item.date_updating"></span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- No Results -->
+        <div 
+            x-show="!loading && !error && filteredCommodities.length === 0"
+            class="text-center py-20"
+        >
+            <p class="text-gray-500 text-xl font-medium">😕 Tidak ada komoditas yang sesuai</p>
+            <p class="text-gray-400 mt-2">Coba ubah kata kunci pencarian atau filter</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-16 text-center text-gray-500 text-sm">
+            <p>Data bersumber dari <a href="https://jepin.pontianak.go.id/harga-komoditas" target="_blank" class="text-blue-600 hover:underline">JePIn Pontianak</a></p>
+            <p class="mt-2">Dibuat dengan ❤️ menggunakan HTMX + Alpine.js + Tailwind CSS</p>
+        </div>
+    </div>
+
+    <script>
+        function commodityApp() {
+            return {
+                commodities: [],
+                filteredCommodities: [],
+                loading: true,
+                error: null,
+                searchQuery: '',
+                sortBy: 'name',
+                statusFilter: 'all',
+                lastUpdate: null,
+
+                async fetchData() {
+                    this.loading = true;
+                    this.error = null;
+                    
+                    try {
+                        // Fetch first page to get total pages
+                        const firstResponse = await fetch('https://adminjepin.pontianak.go.id/api/V1/komoditas?page=1&q=');
+                        
+                        if (!firstResponse.ok) {
+                            throw new Error('Gagal mengambil data dari server');
+                        }
+                        
+                        const firstData = await firstResponse.json();
+                        
+                        if (!firstData.success) {
+                            throw new Error('Data tidak valid');
+                        }
+                        
+                        // Get all commodities from first page (data is nested in data.data)
+                        let allCommodities = [...firstData.data.data];
+                        const totalPages = firstData.data.last_page;
+                        
+                        // Fetch remaining pages in parallel
+                        if (totalPages > 1) {
+                            const pagePromises = [];
+                            for (let page = 2; page <= totalPages; page++) {
+                                pagePromises.push(
+                                    fetch(`https://adminjepin.pontianak.go.id/api/V1/komoditas?page=${page}&q=`)
+                                        .then(res => res.json())
+                                );
+                            }
+                            
+                            const results = await Promise.all(pagePromises);
+                            results.forEach(result => {
+                                if (result.success && result.data.data) {
+                                    allCommodities = allCommodities.concat(result.data.data);
+                                }
+                            });
+                        }
+                        
+                        this.commodities = allCommodities;
+                        this.filteredCommodities = allCommodities;
+                        this.lastUpdate = allCommodities[0]?.effective_date || 'Tidak diketahui';
+                        
+                    } catch (err) {
+                        this.error = err.message;
+                        console.error('Error fetching data:', err);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                filterCommodities() {
+                    let filtered = [...this.commodities];
+                    
+                    // Filter by search query
+                    if (this.searchQuery) {
+                        filtered = filtered.filter(item => 
+                            item.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                        );
+                    }
+                    
+                    // Filter by status
+                    if (this.statusFilter !== 'all') {
+                        filtered = filtered.filter(item => 
+                            item.status === this.statusFilter
+                        );
+                    }
+                    
+                    // Sort
+                    filtered.sort((a, b) => {
+                        switch(this.sortBy) {
+                            case 'name':
+                                return a.name.localeCompare(b.name);
+                            case 'price-low':
+                                return this.parsePrice(a.average_price) - this.parsePrice(b.average_price);
+                            case 'price-high':
+                                return this.parsePrice(b.average_price) - this.parsePrice(a.average_price);
+                            case 'status':
+                                return a.status.localeCompare(b.status);
+                            default:
+                                return 0;
+                        }
+                    });
+                    
+                    this.filteredCommodities = filtered;
+                },
+
+                parsePrice(priceStr) {
+                    // Convert "Rp 48.667" to number 48667
+                    return parseInt(priceStr.replace(/[^0-9]/g, '')) || 0;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
