@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Primary -->
+    <title>Ervan Kurniawan | Digital Portfolio & Focus Games</title>
+    <meta name="title" content="Ervan Kurniawan | Digital Portfolio & Focus Games">
+    <meta name="description" content="Personal digital space of Ervan Kurniawan featuring interactive focus games, typing speed tests, and a minimalist notes system. Built with Vite and Alpine.js.">
+    <meta name="keywords" content="Ervan Kurniawan, karvanidx, portfolio, focus game, typing speed test, software engineer indonesia, minimalist web design">
+    <meta name="author" content="Ervan Kurniawan">
+    <link rel="canonical" href="https://karvanidx.github.io/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://karvanidx.github.io/">
+    <meta property="og:title" content="Ervan Kurniawan | Digital Portfolio & Focus Games">
+    <meta property="og:description" content="Explore interactive games and digital tools in Ervan's minimalist personal space.">
+    <meta property="og:image" content="https://karvanidx.github.io/vite.svg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://karvanidx.github.io/">
+    <meta property="twitter:title" content="Ervan Kurniawan | Digital Portfolio & Focus Games">
+    <meta property="twitter:description" content="Explore interactive games and digital tools in Ervan's minimalist personal space.">
+    <meta property="twitter:image" content="https://karvanidx.github.io/vite.svg">
+
+    <!-- Structured Data: JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Ervan Kurniawan",
+      "url": "https://karvanidx.github.io/",
+      "jobTitle": "Software Engineer",
+      "description": "Ervan Kurniawan is a software engineer creating interactive digital experiences and minimalist web tools.",
+      "sameAs": [
+        "https://github.com/karvanidx"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Ervan Kurniawan Digital Space",
+      "url": "https://karvanidx.github.io/"
+    }
+    </script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+    <div id="app" x-data="portfolioApp" x-init="init()">
+        <div class="bg-grid"></div>
+        <div class="glow-blob"></div>
+        <div class="glow-blob glow-blob-2"></div>
+
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Header -->
+            <header class="relative z-30 flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6 fade-in">
+                <div class="flex items-start gap-4">
+                    <div>
+                        <h1 class="font-display text-2xl md:text-3xl font-bold text-fg tracking-tight">
+                            Ervan Kurniawan
+                        </h1>
+                        <p class="text-muted text-sm mt-1" x-text="location"></p>
+                    </div>
+                    <!-- Info Button -->
+                    <div class="relative">
+                        <button @click="showInfo = !showInfo" @click.away="showInfo = false" 
+                                class="p-1.5 rounded-full hover:bg-surface text-muted hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent"
+                                aria-label="System Information">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </button>
+                        <!-- Info Tooltip/Popover -->
+                        <div x-show="showInfo" x-transition 
+                             class="absolute z-50 top-full left-0 mt-2 w-72 bg-card border border-border rounded-xl p-4 shadow-2xl backdrop-blur-md"
+                             style="display: none;">
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-accent mb-3">System Information</h3>
+                            <div class="space-y-2 text-[11px] font-mono">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-muted">Platform</span>
+                                    <span class="text-fg truncate" x-text="sysInfo.platform"></span>
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-muted">Resolution</span>
+                                    <span class="text-fg" x-text="sysInfo.resolution"></span>
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-muted">Timezone</span>
+                                    <span class="text-fg" x-text="sysInfo.timezone"></span>
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-muted">Referrer</span>
+                                    <span class="text-fg truncate" x-text="sysInfo.referrer"></span>
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-muted">User Agent</span>
+                                    <span class="text-fg text-[10px] leading-tight break-words" x-text="sysInfo.userAgent"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-xs text-muted uppercase tracking-wider opacity-60">Local Time</p>
+                        <p class="font-display text-xl md:text-2xl font-bold tabular-nums" aria-live="polite">
+                            <span x-text="time.hours"></span><span class="time-colon">:</span><span x-text="time.minutes"></span><span class="time-colon">:</span><span x-text="time.seconds"></span>
+                        </p>
+                    </div>
+                    <div class="w-px h-8 bg-border"></div>
+                    <p class="text-xs text-muted" x-text="time.date"></p>
+                </div>
+            </header>
+
+            <!-- Main Grid -->
+            <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                <!-- Notes Section -->
+                <section class="fade-in delay-1 h-full">
+                    <div class="game-card p-4 h-full flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="game-title">
+                                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Notes
+                            </h2>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-muted" x-text="note.length + '/2000'"></span>
+                                <button @click="clearNote()" 
+                                        class="p-1 rounded hover:bg-surface text-muted hover:text-danger transition-colors focus:outline-none focus:ring-2 focus:ring-danger"
+                                        x-show="note.length > 0"
+                                        aria-label="Clear notes"
+                                        title="Clear notes">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <textarea 
+                            class="notes-input flex-1 min-h-[140px] w-full text-sm leading-relaxed"
+                            placeholder="Write something..."
+                            x-model="note"
+                            @input="debouncedSaveNote()"
+                            maxlength="2000"
+                            aria-label="Notes text area"
+                        ></textarea>
+                        <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                            <div class="flex gap-2">
+                                <span class="stat-badge" x-text="stats.words + ' words'"></span>
+                            </div>
+                            <span class="text-xs text-muted" x-show="lastSaved" x-transition x-text="lastSaved"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Game 1: Focus Reaction -->
+                <section class="fade-in delay-2">
+                    <div class="game-card p-4 h-full flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="game-title">
+                                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Focus
+                            </h2>
+                            <div class="flex gap-1.5">
+                                <span class="stat-badge" x-show="focusGame.best < 9999" x-text="'Best: ' + focusGame.best + 'ms'"></span>
+                            </div>
+                        </div>
+                        <div class="relative flex-1 min-h-[160px]">
+                            <canvas 
+                                x-ref="focusCanvas"
+                                class="game-canvas absolute inset-0 w-full h-full"
+                                @click="handleFocusAction()"
+                                @keydown.space.prevent="handleFocusAction()"
+                                @keydown.enter.prevent="handleFocusAction()"
+                                tabindex="0"
+                                role="button"
+                                aria-label="Focus reaction game. Press space or click to interact."
+                            ></canvas>
+                            <div class="absolute bottom-2 left-2 right-2 flex justify-between items-end pointer-events-none">
+                                <span class="text-xs text-muted opacity-60">Click when green</span>
+                                <span class="text-xs font-medium" :class="focusGame.statusColor" x-text="focusGame.statusText"></span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                            <div class="flex gap-1 overflow-x-auto no-scrollbar">
+                                <template x-for="(attempt, i) in focusGame.attempts.slice(-4)" :key="i">
+                                    <span class="stat-badge text-xs" :class="attempt < 250 ? 'highlight' : ''" x-text="attempt + 'ms'"></span>
+                                </template>
+                                <span x-show="focusGame.attempts.length === 0" class="text-xs text-muted">No attempts yet</span>
+                            </div>
+                            <button @click="resetFocusGame()" class="btn btn-secondary text-xs py-1 px-2" x-show="focusGame.attempts.length > 0">Reset</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Game 2: Memory Pattern -->
+                <section class="fade-in delay-3">
+                    <div class="game-card p-4 h-full flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="game-title">
+                                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                                </svg>
+                                Memory
+                            </h2>
+                            <div class="flex gap-1.5">
+                                <span class="stat-badge" x-show="memoryGame.level > 1" x-text="'Level: ' + memoryGame.level"></span>
+                                <span class="stat-badge" x-show="memoryGame.best > 0" x-text="'Best: ' + memoryGame.best"></span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 flex-1 min-h-[120px]">
+                            <template x-for="(cell, i) in memoryGame.grid" :key="i">
+                                <button 
+                                    class="memory-cell"
+                                    :class="{ 
+                                        'active': cell.isActive, 
+                                        'correct': cell.isCorrect,
+                                        'wrong': cell.isWrong
+                                    }"
+                                    @click="handleMemoryClick(i)"
+                                    :disabled="memoryGame.phase !== 'input'"
+                                    :aria-label="'Memory cell ' + (i + 1)"
+                                ></button>
+                            </template>
+                        </div>
+                        <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                            <span class="text-xs" :class="memoryGame.phase === 'show' ? 'text-accent' : 'text-muted'" x-text="memoryGame.statusText"></span>
+                            <button 
+                                @click="startMemoryGame()" 
+                                class="btn btn-primary text-xs py-1 px-3" 
+                                :disabled="memoryGame.phase === 'show'"
+                                x-text="['idle', 'fail', 'success'].includes(memoryGame.phase) ? 'Start' : 'Playing...'"
+                            ></button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Projects Section -->
+            <section class="mt-4 fade-in delay-4">
+                <div class="game-card p-4 md:p-6">
+                    <h2 class="game-title mb-4">
+                        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        My Projects
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <a href="/projects/harga-komoditas-pontianak/index.html" rel="external" target="_blank" class="block bg-surface hover:bg-card border border-border rounded-lg p-4 transition-all duration-200">
+                            <h3 class="font-display text-fg text-lg font-bold mb-1">Harga Komoditas Pontianak</h3>
+                            <p class="text-muted text-sm">Real-time data of basic commodity prices in Pontianak City.</p>
+                            <span class="inline-block mt-2 px-3 py-1 text-xs font-semibold text-accent bg-accent/10 rounded-full">Web App</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Game 3: Typing Speed Section -->
+            <section class="mt-4 fade-in delay-4">
+                <div class="game-card p-4 md:p-6">
+                    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+                        <h2 class="game-title">
+                            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Typing Speed
+                        </h2>
+                        <div class="flex gap-1.5">
+                            <span class="stat-badge" x-show="typingGame.bestWpm > 0" x-text="'Best: ' + typingGame.bestWpm + ' WPM'"></span>
+                            <span class="stat-badge highlight" x-show="typingGame.wpm > 0 || typingGame.phase === 'done'" x-text="typingGame.wpm + ' WPM'"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Target Text Display -->
+                        <div class="flex flex-col">
+                            <div class="typing-text text-sm md:text-base leading-relaxed flex-1 select-none p-4 border border-transparent" x-html="renderTypingDisplay()"></div>
+                            <div class="mt-4">
+                                <div class="wpm-bar">
+                                    <div class="wpm-bar-fill" :style="'width: ' + Math.min(100, (typingGame.wpm / 150) * 100) + '%'"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- User Input & Analytics -->
+                        <div class="flex flex-col justify-between">
+                            <div>
+                                <input 
+                                    type="text"
+                                    x-ref="typingInput"
+                                    class="typing-input w-full p-4 bg-bg rounded-lg border border-border focus:border-accent text-sm md:text-base shadow-inner relaxed"
+                                    placeholder="Start typing here..."
+                                    x-model="typingGame.input"
+                                    @input="handleTypingInput()"
+                                    :disabled="typingGame.phase === 'done'"
+                                    aria-label="Typing input box"
+                                    autocomplete="off"
+                                    autocapitalize="off"
+                                    autocorrect="off"
+                                    spellcheck="false"
+                                />
+                            </div>
+                            <div class="flex items-center justify-between mt-4">
+                                <div class="flex gap-3 text-xs md:text-sm text-muted">
+                                    <span x-text="typingGame.correct + ' correct'"></span>
+                                    <span :class="typingGame.errors > 0 ? 'text-danger' : ''" x-text="typingGame.errors + ' errors'"></span>
+                                    <span x-text="typingGame.accuracy + '% accuracy'"></span>
+                                </div>
+                                <button @click="resetTypingGame()" class="btn btn-secondary text-xs py-1.5 px-3">New Text</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted fade-in delay-4">
+                <p>Built with care &bull; <span x-text="new Date().getFullYear()"></span></p>
+                <span x-text="'Games played: ' + totalGamesPlayed"></span>
+            </footer>
+
+            <!-- Toast Notification -->
+            <div class="toast" :class="{ 'show': toast.show }" role="alert" aria-live="assertive">
+                <span class="font-medium" x-text="toast.message"></span>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ervan Kurniawan - Personal digital space with notes and interactive games.">
+    <meta name="author" content="Ervan Kurniawan">
+    <meta property="og:title" content="Ervan Kurniawan">
+    <meta property="og:type" content="website">
+    <title>Ervan Kurniawan - Digital Space</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (CDN for Single File Production) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Space Grotesk', 'sans-serif'],
+                        mono:['JetBrains Mono', 'monospace'],
+                        body: ['DM Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        bg: 'var(--bg)',
+                        surface: 'var(--surface)',
+                        card: 'var(--card)',
+                        border: 'var(--border)',
+                        fg: 'var(--fg)',
+                        muted: 'var(--muted)',
+                        accent: 'var(--accent)',
+                        success: 'var(--success)',
+                        danger: 'var(--danger)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        :root {
+            --bg: #0c0c0e;
+            --surface: #141417;
+            --card: #1a1a1f;
+            --border: #2a2a30;
+            --fg: #e8e4dc;
+            --muted: #6b6b72;
+            --accent: #c9a227;
+            --success: #4ade80;
+            --danger: #f87171;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--surface); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .glow-blob {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(201,162,39,0.05) 0%, transparent 70%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: -1;
+            top: -200px;
+            right: -200px;
+        }
+        
+        .glow-blob-2 {
+            top: auto;
+            bottom: -200px;
+            left: -200px;
+            right: auto;
+            background: radial-gradient(circle, rgba(74,222,128,0.04) 0%, transparent 70%);
+        }
+
+        .time-colon {
+            animation: pulse-colon 1s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-colon {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .notes-area {
+            background: linear-gradient(145deg, var(--card) 0%, var(--surface) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .notes-area:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(201,162,39,0.1);
+        }
+        
+        .notes-input {
+            background: transparent;
+            border: none;
+            resize: none;
+            color: var(--fg);
+            font-family: 'DM Sans', sans-serif;
+        }
+        
+        .notes-input:focus { outline: none; }
+        .notes-input::placeholder { color: var(--muted); }
+
+        .game-card {
+            background: linear-gradient(145deg, var(--card) 0%, var(--surface) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px -10px rgba(0,0,0,0.4);
+        }
+
+        .game-canvas {
+            border-radius: 8px;
+            cursor: pointer;
+            background: var(--bg);
+            outline: none;
+        }
+        
+        .game-canvas:focus-visible {
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .memory-cell {
+            aspect-ratio: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        
+        .memory-cell:hover:not(:disabled) {
+            border-color: var(--muted);
+        }
+        
+        .memory-cell.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(201,162,39,0.4);
+        }
+        
+        .memory-cell.correct {
+            background: var(--success);
+            border-color: var(--success);
+        }
+        
+        .memory-cell.wrong {
+            background: var(--danger);
+            border-color: var(--danger);
+            animation: shake 0.3s ease;
+        }
+        
+        .memory-cell:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .typing-input {
+            background: transparent;
+            border: none;
+            color: var(--fg);
+            font-family: 'JetBrains Mono', monospace;
+            caret-color: var(--accent);
+        }
+        
+        .typing-input:focus { outline: none; }
+        
+        .typing-text {
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.8;
+            word-break: break-word;
+        }
+        
+        .typing-text .correct { color: var(--success); }
+        .typing-text .incorrect { color: var(--danger); text-decoration: underline; }
+        .typing-text .current { 
+            background: rgba(201,162,39,0.3); 
+            border-radius: 2px;
+        }
+        .typing-text .pending { color: var(--muted); }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg);
+        }
+        
+        .btn-primary:hover { filter: brightness(1.1); }
+        
+        .btn-secondary {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--fg);
+        }
+        
+        .btn-secondary:hover { border-color: var(--muted); }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 12px 20px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .stat-badge {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--muted);
+            transition: all 0.2s ease;
+        }
+        
+        .stat-badge:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .stat-badge.highlight {
+            background: rgba(201,162,39,0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .game-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        *:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .delay-1 { animation-delay: 0.05s; opacity: 0; }
+        .delay-2 { animation-delay: 0.1s; opacity: 0; }
+        .delay-3 { animation-delay: 0.15s; opacity: 0; }
+        .delay-4 { animation-delay: 0.2s; opacity: 0; }
+
+        .wpm-bar {
+            height: 4px;
+            background: var(--surface);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .wpm-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+    <div class="bg-grid"></div>
+    <div class="glow-blob"></div>
+    <div class="glow-blob glow-blob-2"></div>
+
+    <div class="max-w-6xl mx-auto" x-data="portfolioApp()" x-init="init()">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6 fade-in">
+            <div>
+                <h1 class="font-display text-2xl md:text-3xl font-bold text-fg tracking-tight">
+                    Ervan Kurniawan
+                </h1>
+                <p class="text-muted text-sm mt-1" x-text="location"></p>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-xs text-muted uppercase tracking-wider opacity-60">Local Time</p>
+                    <p class="font-display text-xl md:text-2xl font-bold tabular-nums" aria-live="polite">
+                        <span x-text="time.hours"></span><span class="time-colon">:</span><span x-text="time.minutes"></span><span class="time-colon">:</span><span x-text="time.seconds"></span>
+                    </p>
+                </div>
+                <div class="w-px h-8 bg-border hidden md:block"></div>
+                <p class="text-xs text-muted hidden md:block" x-text="time.date"></p>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            
+            <!-- Notes Section -->
+            <section class="fade-in delay-1 h-full">
+                <div class="game-card p-4 h-full flex flex-col">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="game-title">
+                            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Notes
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-muted" x-text="note.length + '/2000'"></span>
+                            <button @click="clearNote()" 
+                                    class="p-1 rounded hover:bg-surface text-muted hover:text-danger transition-colors focus:outline-none focus:ring-2 focus:ring-danger"
+                                    x-show="note.length > 0"
+                                    aria-label="Clear notes"
+                                    title="Clear notes">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea 
+                        class="notes-input flex-1 min-h-[140px] w-full text-sm leading-relaxed"
+                        placeholder="Write something..."
+                        x-model="note"
+                        @input="debouncedSaveNote()"
+                        maxlength="2000"
+                        aria-label="Notes text area"
+                    ></textarea>
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                        <div class="flex gap-2">
+                            <span class="stat-badge" x-text="stats.words + ' words'"></span>
+                        </div>
+                        <span class="text-xs text-muted" x-show="lastSaved" x-transition x-text="lastSaved"></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Game 1: Focus Reaction -->
+            <section class="fade-in delay-2">
+                <div class="game-card p-4 h-full flex flex-col">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="game-title">
+                            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            Focus
+                        </h2>
+                        <div class="flex gap-1.5">
+                            <span class="stat-badge" x-show="focusGame.best < 9999" x-text="'Best: ' + focusGame.best + 'ms'"></span>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 flex flex-col">
+                        <canvas 
+                            x-ref="focusCanvas"
+                            class="game-canvas w-full flex-1 min-h-[120px]"
+                            @click="handleFocusAction()"
+                            @keydown.space.prevent="handleFocusAction()"
+                            @keydown.enter.prevent="handleFocusAction()"
+                            tabindex="0"
+                            role="button"
+                            aria-label="Focus reaction game. Press space or click to interact."
+                        ></canvas>
+                        <div class="absolute bottom-2 left-2 right-2 flex justify-between items-end pointer-events-none">
+                            <span class="text-xs text-muted opacity-60">Click when green</span>
+                            <span class="text-xs font-medium" :class="focusGame.statusColor" x-text="focusGame.statusText"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                        <div class="flex gap-1 overflow-x-auto no-scrollbar">
+                            <template x-for="(attempt, i) in focusGame.attempts.slice(-4)" :key="i">
+                                <span class="stat-badge text-xs" :class="attempt < 250 ? 'highlight' : ''" x-text="attempt + 'ms'"></span>
+                            </template>
+                            <span x-show="focusGame.attempts.length === 0" class="text-xs text-muted">No attempts yet</span>
+                        </div>
+                        <button @click="resetFocusGame()" class="btn btn-secondary text-xs py-1 px-2" x-show="focusGame.attempts.length > 0">Reset</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Game 2: Memory Pattern -->
+            <section class="fade-in delay-3">
+                <div class="game-card p-4 h-full flex flex-col">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="game-title">
+                            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                            </svg>
+                            Memory
+                        </h2>
+                        <div class="flex gap-1.5">
+                            <span class="stat-badge" x-show="memoryGame.level > 1" x-text="'Level: ' + memoryGame.level"></span>
+                            <span class="stat-badge" x-show="memoryGame.best > 0" x-text="'Best: ' + memoryGame.best"></span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 flex-1 min-h-[120px]">
+                        <template x-for="(cell, i) in memoryGame.grid" :key="i">
+                            <button 
+                                class="memory-cell"
+                                :class="{ 
+                                    'active': cell.isActive, 
+                                    'correct': cell.isCorrect,
+                                    'wrong': cell.isWrong
+                                }"
+                                @click="handleMemoryClick(i)"
+                                :disabled="memoryGame.phase !== 'input'"
+                                :aria-label="'Memory cell ' + (i + 1)"
+                            ></button>
+                        </template>
+                    </div>
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                        <span class="text-xs" :class="memoryGame.phase === 'show' ? 'text-accent' : 'text-muted'" x-text="memoryGame.statusText"></span>
+                        <button 
+                            @click="startMemoryGame()" 
+                            class="btn btn-primary text-xs py-1 px-3" 
+                            :disabled="memoryGame.phase === 'show'"
+                            x-text="['idle', 'fail', 'success'].includes(memoryGame.phase) ? 'Start' : 'Playing...'"
+                        ></button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Game 3: Typing Speed Section -->
+        <section class="mt-4 fade-in delay-4">
+            <div class="game-card p-4 md:p-6">
+                <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+                    <h2 class="game-title">
+                        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        Typing Speed
+                    </h2>
+                    <div class="flex gap-1.5">
+                        <span class="stat-badge" x-show="typingGame.bestWpm > 0" x-text="'Best: ' + typingGame.bestWpm + ' WPM'"></span>
+                        <span class="stat-badge highlight" x-show="typingGame.wpm > 0 || typingGame.phase === 'done'" x-text="typingGame.wpm + ' WPM'"></span>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Target Text Display -->
+                    <div class="flex flex-col">
+                        <div class="typing-text text-sm md:text-base leading-relaxed flex-1 select-none" x-html="renderTypingDisplay()"></div>
+                        <div class="mt-4">
+                            <div class="wpm-bar">
+                                <div class="wpm-bar-fill" :style="'width: ' + Math.min(100, (typingGame.wpm / 150) * 100) + '%'"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Input & Analytics -->
+                    <div class="flex flex-col justify-between">
+                        <div>
+                            <input 
+                                type="text"
+                                x-ref="typingInput"
+                                class="typing-input w-full p-4 bg-bg rounded-lg border border-border focus:border-accent text-sm md:text-base shadow-inner"
+                                placeholder="Start typing here..."
+                                x-model="typingGame.input"
+                                @input="handleTypingInput()"
+                                :disabled="typingGame.phase === 'done'"
+                                aria-label="Typing input box"
+                                autocomplete="off"
+                                autocapitalize="off"
+                                autocorrect="off"
+                                spellcheck="false"
+                            />
+                        </div>
+                        <div class="flex items-center justify-between mt-4">
+                            <div class="flex gap-3 text-xs md:text-sm text-muted">
+                                <span x-text="typingGame.correct + ' correct'"></span>
+                                <span :class="typingGame.errors > 0 ? 'text-danger' : ''" x-text="typingGame.errors + ' errors'"></span>
+                                <span x-text="typingGame.accuracy + '% accuracy'"></span>
+                            </div>
+                            <button @click="resetTypingGame()" class="btn btn-secondary text-xs py-1.5 px-3">New Text</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted fade-in delay-4">
+            <p>Built with care &bull; <span x-text="new Date().getFullYear()"></span></p>
+            <span x-text="'Games played: ' + totalGamesPlayed"></span>
+        </footer>
+
+        <!-- Toast Notification -->
+        <div class="toast" :class="{ 'show': toast.show }" role="alert" aria-live="assertive">
+            <span class="font-medium" x-text="toast.message"></span>
+        </div>
+    </div>
+
+    <!-- Application Logic (Alpine.js) -->
+    <script>
+        const TYPING_SENTENCES =[
+            "the quick brown fox jumps over the lazy dog",
+            "pack my box with five dozen liquor jugs",
+            "how vexingly quick daft zebras jump",
+            "the five boxing wizards jump quickly",
+            "sphinx of black quartz judge my vow",
+            "two driven jocks help fax my big quiz",
+            "the jay pig fox zebra and my wolves quack",
+            "sympathizing would fix quaker objectives",
+            "a large fawn jumped quickly over white zinc boxes",
+            "my girl wove six dozen plaid jackets before she quit"
+        ];
+
+        document.addEventListener("alpine:init", () => {
+            Alpine.data("portfolioApp", () => ({
+                // General State
+                note: "",
+                location: "Earth",
+                time: { hours: "00", minutes: "00", seconds: "00", date: "" },
+                lastSaved: "",
+                toast: { show: false, message: "", timeout: null },
+                stats: { words: 0 },
+                totalGamesPlayed: 0,
+                
+                // Focus Game State
+                focusGame: {
+                    state: "idle", // idle, waiting, ready, result
+                    statusText: "Click to start",
+                    statusColor: "text-muted",
+                    best: 9999,
+                    attempts:[],
+                    startTime: 0,
+                    timeout: null,
+                    ctx: null,
+                    dpr: 1 // Device Pixel Ratio
+                },
+
+                // Memory Game State
+                memoryGame: {
+                    phase: "idle", // idle, show, input, success, fail
+                    statusText: "Click Start to begin",
+                    level: 1,
+                    best: 0,
+                    sequence:[],
+                    playerIndex: 0,
+                    grid: Array(9).fill(null).map(() => ({ isActive: false, isCorrect: false, isWrong: false })),
+                },
+
+                // Typing Game State
+                typingGame: {
+                    phase: "idle", // idle, playing, done
+                    text: "",
+                    input: "",
+                    correct: 0,
+                    errors: 0,
+                    wpm: 0,
+                    accuracy: 100,
+                    bestWpm: 0,
+                    startTime: 0,
+                    interval: null
+                },
+
+                // Core Initialization
+                init() {
+                    this.updateClock();
+                    setInterval(() => this.updateClock(), 1000);
+                    
+                    this.detectLocation();
+                    this.loadData();
+                    
+                    // Init Games
+                    this.initFocusCanvas();
+                    this.resetTypingGame();
+
+                    // Resize Listener
+                    window.addEventListener('resize', () => {
+                        this.resizeFocusCanvas();
+                        this.drawFocusState();
+                    });
+                },
+
+                // Clock & Location
+                updateClock() {
+                    const now = new Date();
+                    const months =["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    const pad = (num) => num.toString().padStart(2, '0');
+                    
+                    this.time = {
+                        hours: pad(now.getHours()),
+                        minutes: pad(now.getMinutes()),
+                        seconds: pad(now.getSeconds()),
+                        date: `${months[now.getMonth()]} ${now.getDate()}`
+                    };
+                },
+
+                detectLocation() {
+                    try {
+                        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                        if (tz.includes("Jakarta") || tz.includes("Indonesia")) this.location = "Indonesia";
+                        else if (tz.includes("Singapore")) this.location = "Singapore";
+                        else if (tz.includes("Tokyo")) this.location = "Japan";
+                        else if (tz.includes("America")) this.location = "United States";
+                        else if (tz.includes("Europe")) this.location = "Europe";
+                        else if (tz.includes("Australia")) this.location = "Australia";
+                        else {
+                            const parts = tz.split("/");
+                            if (parts.length > 1) this.location = parts[1].replace("_", " ");
+                        }
+                    } catch (e) {
+                        this.location = "Earth";
+                    }
+                },
+
+                // Notes Logic
+                countWords(str) {
+                    return str ? str.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
+                },
+
+                debouncedSaveNote() {
+                    this.stats.words = this.countWords(this.note);
+                    if (this._saveTimeout) clearTimeout(this._saveTimeout);
+                    
+                    this._saveTimeout = setTimeout(() => {
+                        localStorage.setItem("ervan_notes", this.note);
+                        this.lastSaved = "Saved just now";
+                        setTimeout(() => this.lastSaved = "", 3000);
+                    }, 500);
+                },
+
+                clearNote() {
+                    if (!this.note) return;
+                    this.note = "";
+                    this.stats.words = 0;
+                    localStorage.removeItem("ervan_notes");
+                    this.showToast("Notes cleared successfully.");
+                },
+
+                // Persistence Data
+                loadData() {
+                    const savedNote = localStorage.getItem("ervan_notes");
+                    if (savedNote) {
+                        this.note = savedNote;
+                        this.stats.words = this.countWords(this.note);
+                    }
+
+                    try {
+                        const stats = JSON.parse(localStorage.getItem("ervan_game_stats") || "{}");
+                        this.focusGame.best = stats.focusBest || 9999;
+                        this.memoryGame.best = stats.memoryBest || 0;
+                        this.typingGame.bestWpm = stats.typingBest || 0;
+                        this.totalGamesPlayed = stats.totalPlayed || 0;
+                    } catch (e) { console.error("Could not parse local stats."); }
+                },
+
+                saveStats() {
+                    const stats = {
+                        focusBest: this.focusGame.best,
+                        memoryBest: this.memoryGame.best,
+                        typingBest: this.typingGame.bestWpm,
+                        totalPlayed: this.totalGamesPlayed
+                    };
+                    localStorage.setItem("ervan_game_stats", JSON.stringify(stats));
+                },
+
+                showToast(msg) {
+                    this.toast.message = msg;
+                    this.toast.show = true;
+                    if (this.toast.timeout) clearTimeout(this.toast.timeout);
+                    this.toast.timeout = setTimeout(() => {
+                        this.toast.show = false;
+                    }, 2500);
+                },
+
+                // ==========================================
+                // GAME 1: FOCUS REACTION
+                // ==========================================
+                initFocusCanvas() {
+                    const canvas = this.$refs.focusCanvas;
+                    if (!canvas) return;
+                    this.focusGame.ctx = canvas.getContext("2d");
+                    this.resizeFocusCanvas();
+                    this.drawFocusState();
+                },
+
+                resizeFocusCanvas() {
+                    const canvas = this.$refs.focusCanvas;
+                    if (!canvas) return;
+                    const rect = canvas.getBoundingClientRect();
+                    this.focusGame.dpr = window.devicePixelRatio || 1;
+                    
+                    canvas.width = rect.width * this.focusGame.dpr;
+                    canvas.height = rect.height * this.focusGame.dpr;
+                    canvas.style.width = `${rect.width}px`;
+                    canvas.style.height = `${rect.height}px`;
+                    
+                    this.focusGame.ctx.scale(this.focusGame.dpr, this.focusGame.dpr);
+                },
+
+                drawFocusState() {
+                    const ctx = this.focusGame.ctx;
+                    const canvas = this.$refs.focusCanvas;
+                    if (!ctx || !canvas) return;
+                    
+                    const w = canvas.width / this.focusGame.dpr;
+                    const h = canvas.height / this.focusGame.dpr;
+                    const state = this.focusGame.state;
+
+                    // Clear Canvas
+                    ctx.clearRect(0, 0, w, h);
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+
+                    if (state === 'idle') {
+                        ctx.fillStyle = "#0c0c0e"; // bg
+                        ctx.fillRect(0, 0, w, h);
+                        ctx.fillStyle = "#6b6b72"; // muted
+                        ctx.font = "14px DM Sans";
+                        ctx.fillText("Click to start", w/2, h/2);
+                    } 
+                    else if (state === 'waiting') {
+                        ctx.fillStyle = "#1a0f0f"; // dark red hint
+                        ctx.fillRect(0, 0, w, h);
+                        ctx.fillStyle = "#f87171"; // danger
+                        ctx.font = "16px DM Sans";
+                        ctx.fillText("Wait...", w/2, h/2);
+                    } 
+                    else if (state === 'ready') {
+                        const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w,h)/2);
+                        grad.addColorStop(0, "#1a2a1a");
+                        grad.addColorStop(1, "#0c0c0e");
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(0, 0, w, h);
+                        
+                        ctx.fillStyle = "#4ade80"; // success
+                        ctx.font = "bold 24px Space Grotesk";
+                        ctx.fillText("CLICK!", w/2, h/2);
+                    } 
+                    else if (state === 'result' || state === 'too_soon') {
+                        ctx.fillStyle = "#0c0c0e";
+                        ctx.fillRect(0, 0, w, h);
+                        
+                        if (state === 'too_soon') {
+                            ctx.fillStyle = "#f87171";
+                            ctx.font = "bold 20px Space Grotesk";
+                            ctx.fillText("Too Soon!", w/2, h/2 - 5);
+                        } else {
+                            const score = this.focusGame.attempts[this.focusGame.attempts.length - 1];
+                            ctx.fillStyle = score < 250 ? "#4ade80" : (score < 350 ? "#c9a227" : "#f87171");
+                            ctx.font = "bold 28px Space Grotesk";
+                            ctx.fillText(`${score}ms`, w/2, h/2 - 10);
+                            
+                            ctx.fillStyle = "#6b6b72";
+                            ctx.font = "12px DM Sans";
+                            let rating = score < 200 ? "Alien! 👽" : score < 250 ? "Excellent! ⚡" : score < 350 ? "Good 👍" : "Slow 🐢";
+                            ctx.fillText(rating, w/2, h/2 + 18);
+                        }
+                    }
+                },
+
+                handleFocusAction() {
+                    const fg = this.focusGame;
+                    
+                    if (fg.state === 'idle' || fg.state === 'result' || fg.state === 'too_soon') {
+                        // Start Waiting
+                        fg.state = 'waiting';
+                        fg.statusText = "Wait for green...";
+                        fg.statusColor = "text-danger";
+                        this.drawFocusState();
+                        
+                        const delay = 1200 + Math.random() * 2500; // 1.2s to 3.7s
+                        fg.timeout = setTimeout(() => {
+                            fg.state = 'ready';
+                            fg.statusText = "GO!";
+                            fg.statusColor = "text-success";
+                            fg.startTime = performance.now();
+                            this.drawFocusState();
+                        }, delay);
+                    } 
+                    else if (fg.state === 'waiting') {
+                        // False Start
+                        clearTimeout(fg.timeout);
+                        fg.state = 'too_soon';
+                        fg.statusText = "Click to retry";
+                        fg.statusColor = "text-muted";
+                        this.drawFocusState();
+                    } 
+                    else if (fg.state === 'ready') {
+                        // Success Click
+                        const reactionTime = Math.round(performance.now() - fg.startTime);
+                        fg.attempts.push(reactionTime);
+                        
+                        if (reactionTime < fg.best) fg.best = reactionTime;
+                        if (fg.attempts.length > 5) fg.attempts.shift(); // Keep last 5
+                        
+                        fg.state = 'result';
+                        fg.statusText = "Click to retry";
+                        fg.statusColor = "text-muted";
+                        this.drawFocusState();
+                        
+                        this.totalGamesPlayed++;
+                        this.saveStats();
+                    }
+                },
+
+                resetFocusGame() {
+                    clearTimeout(this.focusGame.timeout);
+                    this.focusGame.attempts =[];
+                    this.focusGame.best = 9999;
+                    this.focusGame.state = 'idle';
+                    this.focusGame.statusText = "Click to start";
+                    this.drawFocusState();
+                    this.saveStats();
+                    this.showToast("Focus stats reset.");
+                },
+
+                // ==========================================
+                // GAME 2: MEMORY PATTERN (Simon Says Style)
+                // ==========================================
+                async startMemoryGame() {
+                    if (this.memoryGame.phase === 'show') return;
+                    
+                    // Reset or Next Level?
+                    if (this.memoryGame.phase === 'fail' || this.memoryGame.phase === 'idle') {
+                        this.memoryGame.level = 1;
+                        this.memoryGame.sequence =[];
+                    }
+                    
+                    this.memoryGame.phase = 'show';
+                    this.memoryGame.statusText = "Watch the pattern...";
+                    this.memoryGame.playerIndex = 0;
+                    
+                    // Add new step to sequence
+                    this.memoryGame.sequence.push(Math.floor(Math.random() * 9));
+                    
+                    this.clearMemoryGrid();
+                    await this.playMemorySequence();
+                },
+
+                async playMemorySequence() {
+                    await new Promise(r => setTimeout(r, 600)); // Initial pause
+                    
+                    for (let i = 0; i < this.memoryGame.sequence.length; i++) {
+                        if (this.memoryGame.phase !== 'show') break; // Interrupted
+                        
+                        let cellIdx = this.memoryGame.sequence[i];
+                        this.memoryGame.grid[cellIdx].isActive = true;
+                        
+                        await new Promise(r => setTimeout(r, 400)); // duration shown
+                        this.memoryGame.grid[cellIdx].isActive = false;
+                        
+                        await new Promise(r => setTimeout(r, 200)); // gap between blinks
+                    }
+                    
+                    if (this.memoryGame.phase === 'show') {
+                        this.memoryGame.phase = 'input';
+                        this.memoryGame.statusText = "Your turn! Repeat the pattern";
+                    }
+                },
+
+                clearMemoryGrid() {
+                    this.memoryGame.grid.forEach(cell => {
+                        cell.isActive = false;
+                        cell.isCorrect = false;
+                        cell.isWrong = false;
+                    });
+                },
+
+                handleMemoryClick(idx) {
+                    if (this.memoryGame.phase !== 'input') return;
+
+                    const expectedIdx = this.memoryGame.sequence[this.memoryGame.playerIndex];
+                    
+                    if (idx === expectedIdx) {
+                        // Correct tap
+                        this.memoryGame.grid[idx].isCorrect = true;
+                        setTimeout(() => this.memoryGame.grid[idx].isCorrect = false, 250);
+                        
+                        this.memoryGame.playerIndex++;
+                        
+                        // Level complete?
+                        if (this.memoryGame.playerIndex === this.memoryGame.sequence.length) {
+                            this.memoryGame.phase = 'success';
+                            this.memoryGame.statusText = `Correct! Level ${this.memoryGame.level} complete!`;
+                            
+                            if (this.memoryGame.level > this.memoryGame.best) {
+                                this.memoryGame.best = this.memoryGame.level;
+                            }
+                            this.totalGamesPlayed++;
+                            this.saveStats();
+                            
+                            // Auto start next level
+                            this.memoryGame.level++;
+                            setTimeout(() => {
+                                if (this.memoryGame.phase === 'success') this.startMemoryGame();
+                            }, 1200);
+                        }
+                    } else {
+                        // Wrong tap
+                        this.memoryGame.grid[idx].isWrong = true;
+                        setTimeout(() => this.memoryGame.grid[idx].isWrong = false, 400);
+                        
+                        this.memoryGame.phase = 'fail';
+                        this.memoryGame.statusText = `Game Over! Reached Level ${this.memoryGame.level}`;
+                        this.totalGamesPlayed++;
+                        this.saveStats();
+                    }
+                },
+
+                // ==========================================
+                // GAME 3: TYPING SPEED
+                // ==========================================
+                resetTypingGame() {
+                    let newText = TYPING_SENTENCES[Math.floor(Math.random() * TYPING_SENTENCES.length)];
+                    // Prevent same text consecutive
+                    while(newText === this.typingGame.text && TYPING_SENTENCES.length > 1) {
+                         newText = TYPING_SENTENCES[Math.floor(Math.random() * TYPING_SENTENCES.length)];
+                    }
+
+                    this.typingGame = {
+                        ...this.typingGame,
+                        phase: "idle",
+                        text: newText,
+                        input: "",
+                        correct: 0,
+                        errors: 0,
+                        wpm: 0,
+                        accuracy: 100,
+                        startTime: 0
+                    };
+                    
+                    if (this.typingGame.interval) clearInterval(this.typingGame.interval);
+                    
+                    // Focus back to input if user manually reset
+                    this.$nextTick(() => {
+                        if (this.$refs.typingInput) this.$refs.typingInput.focus();
+                    });
+                },
+
+                renderTypingDisplay() {
+                    let html = '';
+                    const text = this.typingGame.text;
+                    const input = this.typingGame.input;
+                    
+                    for (let i = 0; i < text.length; i++) {
+                        let statusClass = 'pending';
+                        if (i < input.length) {
+                            statusClass = input[i] === text[i] ? 'correct' : 'incorrect';
+                        } else if (i === input.length && this.typingGame.phase !== 'done') {
+                            statusClass = 'current';
+                        }
+                        
+                        // Handle spaces visually
+                        const char = text[i] === ' ' ? '&nbsp;' : text[i];
+                        html += `<span class="${statusClass} transition-colors duration-100">${char}</span>`;
+                    }
+                    return html;
+                },
+
+                handleTypingInput() {
+                    const tg = this.typingGame;
+                    
+                    // Prevent typing beyond text length
+                    if (tg.input.length > tg.text.length) {
+                        tg.input = tg.input.substring(0, tg.text.length);
+                        return;
+                    }
+
+                    // Start Game Trigger
+                    if (tg.phase === 'idle' && tg.input.length > 0) {
+                        tg.phase = 'playing';
+                        tg.startTime = performance.now();
+                        
+                        tg.interval = setInterval(() => {
+                            if (tg.phase === 'playing') this.calculateTypingStats();
+                        }, 500);
+                    }
+
+                    // Calculate correct/errors instantly
+                    let currentCorrect = 0;
+                    let currentErrors = 0;
+                    for (let i = 0; i < tg.input.length; i++) {
+                        if (tg.input[i] === tg.text[i]) currentCorrect++;
+                        else currentErrors++;
+                    }
+                    
+                    tg.correct = currentCorrect;
+                    tg.errors = currentErrors;
+                    
+                    if (tg.input.length > 0) {
+                        tg.accuracy = Math.round((tg.correct / tg.input.length) * 100);
+                    } else {
+                        tg.accuracy = 100;
+                    }
+
+                    // Check End Condition
+                    if (tg.input.length === tg.text.length) {
+                        tg.phase = 'done';
+                        clearInterval(tg.interval);
+                        this.calculateTypingStats(); // Final precision calc
+                        
+                        if (tg.wpm > tg.bestWpm) {
+                            tg.bestWpm = tg.wpm;
+                        }
+                        this.totalGamesPlayed++;
+                        this.saveStats();
+                        this.showToast("Typing test completed!");
+                    }
+                },
+
+                calculateTypingStats() {
+                    const tg = this.typingGame;
+                    const timeElapsedMs = performance.now() - tg.startTime;
+                    const timeElapsedMins = timeElapsedMs / 1000 / 60;
+                    
+                    if (timeElapsedMins > 0) {
+                        // Standard WPM formula: (characters / 5) / minutes
+                        tg.wpm = Math.round((tg.correct / 5) / timeElapsedMins);
+                    }
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

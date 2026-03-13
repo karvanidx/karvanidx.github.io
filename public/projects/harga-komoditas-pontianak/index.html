@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harga Komoditas Pontianak | Ervan Kurniawan</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Space Grotesk', 'sans-serif'],
+                        body: ['DM Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        bg: '#0c0c0e',
+                        surface: '#141417',
+                        card: '#1a1a1f',
+                        border: '#2a2a30',
+                        fg: '#e8e4dc',
+                        muted: '#6b6b72',
+                        accent: '#c9a227',
+                        success: '#4ade80',
+                        danger: '#f87171',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #0c0c0e;
+            color: #e8e4dc;
+        }
+        
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .glow-blob {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(201,162,39,0.05) 0%, transparent 70%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: -1;
+            top: -200px;
+            right: -200px;
+        }
+
+        .commodity-card {
+            background: linear-gradient(145deg, #1a1a1f 0%, #141417 100%);
+            border: 1px solid #2a2a30;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .commodity-card:hover {
+            transform: translateY(-4px);
+            border-color: #c9a227;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #141417; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #2a2a30; border-radius: 3px; }
+
+        input, select {
+            background-color: #141417 !important;
+            border: 1px solid #2a2a30 !important;
+            color: #e8e4dc !important;
+        }
+
+        [x-cloak] { display: none !important; }
+
+        .compact-list-row {
+            display: grid;
+            grid-template-columns: 48px 1fr 80px 60px;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #2a2a30;
+            transition: background-color 0.2s;
+        }
+        
+        @media (min-width: 768px) {
+            .compact-list-row {
+                grid-template-columns: 60px 1fr 150px 100px;
+                gap: 24px;
+                padding: 16px 24px;
+            }
+        }
+        
+        .compact-list-row:hover {
+            background-color: rgba(201,162,39,0.05);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="p-3 md:p-8 lg:p-12 min-h-screen custom-scrollbar text-fg">
+    <div class="bg-grid"></div>
+    <div class="glow-blob"></div>
+
+    <div x-data="commodityApp()" x-init="init()" class="max-w-7xl mx-auto">
+        
+        <!-- Navigation -->
+        <nav class="mb-4 md:mb-10 flex justify-between items-center">
+            <a href="/" class="flex items-center gap-2 text-muted hover:text-accent transition-colors group">
+                <svg class="w-4 h-4 md:w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span class="text-[10px] md:text-sm font-bold uppercase tracking-widest">Back</span>
+            </a>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+                <p class="text-[9px] md:text-[10px] text-muted uppercase font-bold tracking-widest">JePIn Live Data</p>
+            </div>
+        </nav>
+
+        <!-- Header -->
+        <header class="mb-6 md:mb-12">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 class="font-display text-3xl md:text-5xl font-bold text-fg tracking-tight mb-1">
+                        Komoditas <span class="text-accent">Pontianak</span>
+                    </h1>
+                    <p class="text-muted text-[10px] md:text-sm uppercase tracking-[0.2em] font-medium">Transparansi Harga Kebutuhan Pokok</p>
+                </div>
+                <div class="flex flex-col items-start md:items-end gap-0.5" x-show="lastUpdate">
+                    <p class="text-[9px] md:text-[10px] text-muted uppercase font-black tracking-tighter text-right w-full md:w-auto">Last updated</p>
+                    <span class="font-display text-base md:text-xl font-black text-accent" x-text="lastUpdate"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Compact Sticky Nav -->
+        <section class="bg-surface/90 backdrop-blur-xl border border-border rounded-2xl p-3 md:p-4 mb-6 sticky top-2 z-30 shadow-2xl">
+            <div class="flex flex-col gap-4">
+                <!-- Row 1: Search & Sort Combined -->
+                <div class="flex gap-2 items-center">
+                    <div class="flex-1 relative">
+                        <input 
+                            type="text" 
+                            x-model="searchQuery"
+                            @input="filterCommodities()"
+                            placeholder="Search..."
+                            class="w-full pl-9 pr-4 py-2.5 rounded-xl focus:ring-1 focus:ring-accent outline-none transition text-xs md:text-sm border-none"
+                        >
+                        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <div class="w-24 md:w-40 relative">
+                        <select 
+                            x-model="sortBy"
+                            @change="filterCommodities()"
+                            class="w-full px-3 py-2.5 rounded-xl focus:ring-1 focus:ring-accent outline-none transition cursor-pointer appearance-none text-[10px] md:text-xs font-bold uppercase border-none pr-8"
+                        >
+                            <option value="name">Name</option>
+                            <option value="price-low">Lowest</option>
+                            <option value="price-high">Highest</option>
+                        </select>
+                        <svg class="w-3 h-3 absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+
+                <!-- Row 2: Trend, View, Export (Grid System) -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                    <!-- Trend -->
+                    <div class="md:col-span-6">
+                        <label class="block text-[9px] font-black uppercase tracking-widest text-muted mb-1.5 ml-1">Trend</label>
+                        <div class="flex gap-1 bg-bg p-1 rounded-xl border border-border overflow-x-auto no-scrollbar">
+                            <template x-for="status in ['all', 'naik', 'stabil', 'turun']">
+                                <button 
+                                    @click="statusFilter = status; filterCommodities()"
+                                    :class="statusFilter === status ? 'bg-accent text-bg shadow-lg' : 'text-muted hover:text-fg'"
+                                    class="flex-1 py-1.5 text-[9px] md:text-[10px] font-black uppercase rounded-lg transition-all min-w-[60px]"
+                                    x-text="status"
+                                ></button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- View & Export Combined in one row for better balance -->
+                    <div class="md:col-span-6 grid grid-cols-2 gap-3">
+                        <!-- View Toggle -->
+                        <div class="flex flex-col">
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-muted mb-1.5 ml-1 text-center">View Mode</label>
+                            <div class="flex gap-1 bg-bg p-1 rounded-xl border border-border">
+                                <button @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-accent text-bg' : 'text-muted'" class="flex-1 h-8 flex justify-center items-center rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                                </button>
+                                <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-accent text-bg' : 'text-muted'" class="flex-1 h-8 flex justify-center items-center rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Export -->
+                        <div class="flex flex-col">
+                            <label class="block text-[9px] font-black uppercase tracking-widest text-muted mb-1.5 ml-1 text-center">Export To</label>
+                            <div class="bg-bg p-1 rounded-xl border border-border">
+                                <button @click="exportToCSV()" class="w-full h-8 text-[10px] font-black uppercase text-muted hover:text-accent transition-colors flex items-center justify-center gap-2">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading / Error States -->
+        <div x-show="loading" class="flex flex-col justify-center items-center py-32 space-y-4">
+            <div class="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-[10px] font-mono text-muted uppercase tracking-widest animate-pulse">Syncing Database</p>
+        </div>
+
+        <div x-show="error" x-cloak class="bg-danger/10 border border-danger/20 rounded-2xl p-8 text-center max-w-md mx-auto">
+            <p class="text-xs text-muted mb-4" x-text="error"></p>
+            <button @click="fetchData(true)" class="px-6 py-2 bg-danger text-bg rounded-lg font-black text-[10px] uppercase">Retry Connection</button>
+        </div>
+
+        <!-- GRID VIEW -->
+        <div x-show="!loading && !error && viewMode === 'grid'" x-cloak class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <template x-for="item in filteredCommodities" :key="item.id">
+                <div class="commodity-card rounded-2xl overflow-hidden flex flex-col">
+                    <div class="relative h-44 md:h-52 bg-surface overflow-hidden group">
+                        <img :src="item.pathImage" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" @error="$event.target.src='https://via.placeholder.com/400x300?text=No+Image'">
+                        <div class="absolute top-3 right-3">
+                            <span :class="{'bg-success text-bg': item.status === 'stabil', 'bg-danger text-bg': item.status === 'naik', 'bg-blue-400 text-bg': item.status === 'turun'}" class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase shadow-xl" x-text="item.status"></span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col">
+                        <h3 class="font-display font-bold text-fg text-sm md:text-base mb-3 line-clamp-2" x-text="item.name"></h3>
+                        <div class="flex items-baseline gap-1.5 mb-4">
+                            <span class="text-xl font-black text-accent" x-text="item.average_price"></span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-auto pt-3 border-t border-border/50">
+                            <div class="text-[9px]"><p class="text-muted uppercase font-bold mb-0.5">Low</p><p class="font-bold text-success" x-text="item.lowest_price"></p></div>
+                            <div class="text-[9px]"><p class="text-muted uppercase font-bold mb-0.5">High</p><p class="font-bold text-danger" x-text="item.highest_price"></p></div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- ULTRA COMPACT LIST VIEW -->
+        <div x-show="!loading && !error && viewMode === 'list'" x-cloak class="bg-surface/30 border border-border rounded-2xl overflow-hidden shadow-2xl">
+            <div class="hidden md:grid grid-cols-[60px_1fr_150px_100px] gap-6 px-6 py-4 bg-bg/50 text-[10px] font-black uppercase tracking-widest text-muted border-b border-border">
+                <span>Img</span>
+                <span>Product Name</span>
+                <span>Price (Avg)</span>
+                <span class="text-right">Trend</span>
+            </div>
+            <template x-for="item in filteredCommodities" :key="item.id">
+                <div class="compact-list-row">
+                    <img :src="item.pathImage" class="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover bg-bg shadow-md" @error="$event.target.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <div class="min-w-0">
+                        <p class="font-bold text-xs md:text-sm text-fg truncate" x-text="item.name"></p>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs md:text-base font-black text-accent" x-text="item.average_price"></span>
+                        <span class="text-[9px] md:text-[10px] font-bold" :class="item.status === 'naik' ? 'text-danger' : 'text-success'" x-show="item.diff_price !== 'Rp 0'" x-text="item.diff_price"></span>
+                    </div>
+                    <div class="text-right">
+                        <span :class="{'text-success': item.status === 'stabil', 'text-danger': item.status === 'naik', 'text-blue-400': item.status === 'turun'}" class="text-[9px] md:text-[10px] font-black uppercase px-2 py-1 bg-bg/50 rounded" x-text="item.status"></span>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- No Results -->
+        <div x-show="!loading && !error && filteredCommodities.length === 0" x-cloak class="text-center py-32">
+            <p class="text-muted font-black text-xs uppercase tracking-widest">No matching data found</p>
+        </div>
+
+        <footer class="mt-20 pb-10 text-center border-t border-border pt-10">
+            <p class="text-[9px] text-muted uppercase tracking-[0.2em] font-bold opacity-70">
+                Build with Vite &bull; Alpine.js &bull; Tailwind CSS &bull; JePIn API
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function commodityApp() {
+            return {
+                commodities: [],
+                filteredCommodities: [],
+                loading: true,
+                error: null,
+                searchQuery: '',
+                sortBy: 'name',
+                statusFilter: 'all',
+                lastUpdate: null,
+                isCached: false,
+                viewMode: 'grid',
+
+                init() {
+                    // [2] Adaptive View: List on Mobile (< 768px), Grid on Desktop
+                    if (window.innerWidth < 768) {
+                        this.viewMode = 'list';
+                    } else {
+                        this.viewMode = 'grid';
+                    }
+                    this.fetchData();
+                },
+
+                async fetchData(force = false) {
+                    this.loading = true;
+                    const CACHE_KEY = 'komoditas_pontianak_cache';
+                    const DATE_KEY = 'komoditas_pontianak_date';
+                    const today = new Date().toISOString().split('T')[0];
+                    const cachedData = localStorage.getItem(CACHE_KEY);
+                    const cacheDate = localStorage.getItem(DATE_KEY);
+
+                    if (!force && cachedData && cacheDate === today) {
+                        const data = JSON.parse(cachedData);
+                        this.processData(data);
+                        this.isCached = true;
+                        this.loading = false;
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch('https://adminjepin.pontianak.go.id/api/V1/komoditas?page=1&q=');
+                        const json = await res.json();
+                        let all = [...json.data.data];
+                        const total = json.data.last_page;
+                        
+                        if (total > 1) {
+                            const pages = [];
+                            for (let p = 2; p <= total; p++) {
+                                pages.push(fetch(`https://adminjepin.pontianak.go.id/api/V1/komoditas?page=${p}&q=`).then(r => r.json()));
+                            }
+                            const results = await Promise.all(pages);
+                            results.forEach(r => { if (r.success) all = all.concat(r.data.data); });
+                        }
+                        
+                        localStorage.setItem(CACHE_KEY, JSON.stringify(all));
+                        localStorage.setItem(DATE_KEY, today);
+                        this.processData(all);
+                        this.isCached = false;
+                    } catch (err) {
+                        this.error = "Connection Failed";
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                processData(data) {
+                    this.commodities = data;
+                    this.filteredCommodities = data;
+                    const today = new Date();
+                    let latest = null;
+                    data.forEach(item => {
+                        if (item.date_updating) {
+                            const p = item.date_updating.split(' ');
+                            if (p.length === 3) {
+                                const day = parseInt(p[0]);
+                                const year = parseInt(p[2]);
+                                const months = {'Jan':0,'Feb':1,'Mar':2,'Apr':3,'Mei':4,'Jun':5,'Jul':6,'Agu':7,'Sep':8,'Okt':9,'Nov':10,'Des':11,'Januari':0,'Februari':1,'Maret':2,'April':3,'Mei':4,'Juni':5,'Juli':6,'Agustus':7,'September':8,'Oktober':9,'November':10,'Desember':11};
+                                const month = months[p[1]];
+                                if (month !== undefined) {
+                                    const d = new Date(year, month, day);
+                                    if (d <= today && (!latest || d > latest)) latest = d;
+                                }
+                            }
+                        }
+                    });
+                    const mIndo = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                    this.lastUpdate = latest ? `${latest.getDate()} ${mIndo[latest.getMonth()]} ${latest.getFullYear()}` : 'Sync Active';
+                },
+
+                filterCommodities() {
+                    let f = [...this.commodities];
+                    if (this.searchQuery) f = f.filter(i => i.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                    if (this.statusFilter !== 'all') f = f.filter(i => i.status === this.statusFilter);
+                    f.sort((a, b) => {
+                        if (this.sortBy === 'name') return a.name.localeCompare(b.name);
+                        if (this.sortBy === 'price-low') return this.p(a.average_price) - this.p(b.average_price);
+                        if (this.sortBy === 'price-high') return this.p(b.average_price) - this.p(a.average_price);
+                        return 0;
+                    });
+                    this.filteredCommodities = f;
+                },
+
+                exportToCSV() {
+                    if (this.filteredCommodities.length === 0) return;
+                    
+                    const headers = ['Nama Komoditas', 'Harga Rata-rata', 'Harga Terendah', 'Harga Tertinggi', 'Trend'];
+                    const rows = this.filteredCommodities.map(item => [
+                        `"${item.name}"`,
+                        `"${item.average_price}"`,
+                        `"${item.lowest_price}"`,
+                        `"${item.highest_price}"`,
+                        `"${item.status}"`
+                    ]);
+                    
+                    const csvContent = "data:text/csv;charset=utf-8," 
+                        + headers.join(",") + "\n" 
+                        + rows.map(e => e.join(",")).join("\n");
+                    
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `komoditas-pontianak-${new Date().toISOString().split('T')[0]}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+
+                p(s) { return parseInt(s.replace(/[^0-9]/g, '')) || 0; }
+            }
+        }
+    </script>
+</body>
+</html>
