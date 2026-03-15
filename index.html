@@ -324,7 +324,7 @@
                                     <span :class="typingGame.errors > 0 ? 'text-danger' : ''" x-text="typingGame.errors + ' errors'"></span>
                                     <span x-text="typingGame.accuracy + '% accuracy'"></span>
                                 </div>
-                                <button @click="resetTypingGame()" class="btn btn-secondary text-xs py-1.5 px-3">New Text</button>
+                                <button @click="resetTypingGame(true)" class="btn btn-secondary text-xs py-1.5 px-3">New Text</button>
                             </div>
                         </div>
                     </div>
@@ -333,7 +333,7 @@
 
             <!-- Footer -->
             <footer class="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted fade-in delay-4">
-                <p>Built with care &bull; <span x-text="new Date().getFullYear()"></span></p>
+                <p>Built with Gemini 3 (ai.dev) and gemini-cli &bull; <span x-text="new Date().getFullYear()"></span></p>
                 <span x-text="'Games played: ' + totalGamesPlayed"></span>
             </footer>
 

@@ -509,7 +509,7 @@ document.addEventListener("alpine:init", () => {
         },
 
         // TYPING SPEED
-        resetTypingGame(this: any) {
+        resetTypingGame(this: any, shouldFocus = false) {
             let newText = TYPING_SENTENCES[Math.floor(Math.random() * TYPING_SENTENCES.length)];
             while(newText === this.typingGame.text && TYPING_SENTENCES.length > 1) {
                  newText = TYPING_SENTENCES[Math.floor(Math.random() * TYPING_SENTENCES.length)];
@@ -529,9 +529,11 @@ document.addEventListener("alpine:init", () => {
             
             if (this.typingGame.interval) clearInterval(this.typingGame.interval);
             
-            this.$nextTick(() => {
-                if (this.$refs.typingInput) (this.$refs.typingInput as HTMLInputElement).focus();
-            });
+            if (shouldFocus) {
+                this.$nextTick(() => {
+                    if (this.$refs.typingInput) (this.$refs.typingInput as HTMLInputElement).focus();
+                });
+            }
         },
 
         renderTypingDisplay(this: AppState) {
